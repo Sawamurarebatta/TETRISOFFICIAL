@@ -1,6 +1,8 @@
+#IMPORTAR LAS BIBLIOTECAS NECESARIAS PARA EL DESARROLLO DEL JUEGO
 import pygame
 import random
 
+#DEFINIR LOS COLORES EN FORMATO RGB
 colors = [
     (0, 0, 0),
     (179, 30, 189),
@@ -13,17 +15,21 @@ colors = [
     (6, 115, 4)
 
 ]
+
+#INICIALIZAR MODULO DE FUENTES DE PYGAME
 pygame.font.init()
 
-
+#DEFINICION DE LA CLASE FIGURE: REPRESENTACION DE LAS PIEZAS DEL TETRIS
 class Figure:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.type = random.randint(0, len(self.figures) - 1)
+        #SE ELIGE UN TIPO DE FIGURA Y COLOR DE MANERA ALEATORIA
+        self.type = random.randint(0, len(self.figures) - 1)  
         self.color = random.randint(1, len(colors) - 1)
         self.rotation = 0
 
+    #CONFIGURACIONES DE LAS FIGURAS EN FORMA DE MATRICES
     figures = [
         [[1, 5, 9, 13], [4, 5, 6, 7]],
         [[4, 5, 9, 10], [2, 6, 5, 9]],
@@ -36,13 +42,15 @@ class Figure:
 
     ]
 
+    #DEVUELVE LA CONFIGURACION ACTUAL DE LA FIGURA
     def image(self):
         return self.figures[self.type][self.rotation]
 
+    #ROTA LA FIGURA ALREDEDOR DE SU PUNTO CENTRAL
     def rotate(self):
         self.rotation = (self.rotation + 1) % len(self.figures[self.type])
 
-
+#DEFINICION DE LA CLASE TETRIS QUE REPRESENTA EL ESTADO DEL JUEGO 
 class Tetris:
     def __init__(self, height, width):
         self.level = 2
@@ -67,9 +75,11 @@ class Tetris:
                 new_line.append(0)
             self.field.append(new_line)
 
+    #CREA UNA NUEVA FIGURA EN LA PARTE SUPERIOR CENTRAL DEL AREA DEL JUEGO
     def new_figure(self):
         self.figure = Figure(5, 0)
 
+    #VERIFICA SI LA FIGURA ACTUAL SE SUPERPONE CON OTRAS FIGURAS O ALCANZA LOS LIMITES DEL AREA DE JUEGO
     def intersects(self):
         intersection = False
         for i in range(4):
@@ -82,6 +92,7 @@ class Tetris:
                         intersection = True
         return intersection
 
+    #ELIMINA LAS LINEAS COMPLETAS DE LA CUADRICULA Y ACTUALIZA LA PUNTUACION DEL JUEGO
     def break_lines(self):
         lines = 0
         for i in range(1, self.height):
@@ -97,18 +108,21 @@ class Tetris:
                         self.field[i1][j] = self.field[i1 - 1][j]
         self.score += lines * 100
 
+    #MUEVE LA FIGURA HACIA ABAJO HASTA QUE COLISIONA CON OTRAS FIGURAS O LLEGA AL FONDO
     def go_space(self):
         while not self.intersects():
             self.figure.y += 1
         self.figure.y -= 1
         self.freeze()
 
+    #MUEVE LA FIGURA HACIA ABAJO Y VERIFICA SI COLISONA CON OTRAS FIGURAS
     def go_down(self):
         self.figure.y += 1
         if self.intersects():
             self.figure.y -= 1
             self.freeze()
 
+    #CONGELA LA FIGURA EN SU POSICON ACTUAL Y ACTUALIZA LA CUADRICULA DEL JUEGO 
     def freeze(self):
         for i in range(4):
             for j in range(4):
@@ -119,18 +133,21 @@ class Tetris:
         if self.intersects():
             self.state = "game over"
 
+    #MUEVE LA FIGURA HACIA LA IZQUIERDA O DERECHA
     def go_side(self, dx):
         old_x = self.figure.x
         self.figure.x += dx
         if self.intersects():
             self.figure.x = old_x
 
+    #ROTA LA FIGURA Y VERIFICA SI COLISIONA CON OTRAS FIGURAS
     def rotate(self):
         old_rotation = self.figure.rotation
         self.figure.rotate()
         if self.intersects():
             self.figure.rotation = old_rotation
 
+    #MUESTRA LA PROXIMA FIGURA EN LA VENTANA
     def show_next_figure(self, screen):
         font = pygame.font.SysFont('chickenpie', 25, True, False)
         text = font.render("Próxima figura:", True,GREEN)
@@ -165,10 +182,10 @@ pygame.mixer.music.load("tetris.mp3")
 pygame.mixer.music.set_volume(0.2)  # Ajustar el volumen aquí
 pygame.mixer.music.play(-1)  # Reproducir en bucle
 
-# Initialize the game engine
+# INICIALIZAR EL MOTOR DEL JUEGO
 pygame.init()
 
-# Define some colors
+#DEFINE ALGUNOS COLORES
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
@@ -181,9 +198,10 @@ screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("Tetris")
 
+#DEFINIR LA IMAGEN DE FONDO DE PANTALLA
 background_image = pygame.image.load("MIAU.jpg").convert()
 
-# Loop until the user clicks the close button.
+# Bucle hasta que el usuario haga clic en el botón cerrar.
 highscore = 0
 current_score = 0
 done = False
@@ -192,26 +210,31 @@ fps = 15
 game = Tetris(20, 14)
 counter = 0
 
-#current_score = 0
 pressing_down = False
 
 intentos = 3
-
+#DEFINIR EL BUCLE PRINCIPAL DEL JUEGO
 while not done:
+    # Verificar si se necesita generar una nueva figura
     if game.figure is None:
         game.new_figure()
+
+    # Contador utilizado para controlar la velocidad del juego
     counter += 1
     if counter > 100000:
         counter = 0
 
+    # Mover hacia abajo automáticamente o si la tecla de abajo está presionada
     if counter % (fps // game.level // 1) == 0 or pressing_down:
         if game.state == "start":
             game.go_down()
 
+    # Capturar eventos del teclado y otros eventos de pygame
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
         if event.type == pygame.KEYDOWN:
+            # Manejar eventos de teclado cuando una tecla se presiona
             if event.key == pygame.K_UP:
                 game.rotate()
             if event.key == pygame.K_DOWN:
@@ -227,14 +250,19 @@ while not done:
             if event.key == pygame.K_q:
                 done = True
 
+        # Manejar eventos de teclado cuando una tecla se suelta
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 pressing_down = False
 
+    # Limpiar la pantalla y mostrar el fondo
     screen.fill(BLACK)
     screen.blit(background_image, (0, 0))
-    game.show_next_figure(screen)  # para que salga la figura que tienes
 
+    # Mostrar la siguiente figura que caerá
+    game.show_next_figure(screen)  
+
+    # Dibujar la cuadrícula del juego
     for i in range(game.height):
         for j in range(game.width):
             pygame.draw.rect(screen, WHITE, [game.x + game.zoom * j, game.y + game.zoom * i, game.zoom, game.zoom], 1)
@@ -242,6 +270,7 @@ while not done:
                 pygame.draw.rect(screen, colors[game.field[i][j]],
                                  [game.x + game.zoom * j + 1, game.y + game.zoom * i + 1, game.zoom - 2, game.zoom - 1])
 
+    # Dibujar la figura actual en juego
     if game.figure is not None:
         for i in range(4):
             for j in range(4):
@@ -252,19 +281,24 @@ while not done:
                                       game.y + game.zoom * (i + game.figure.y) + 1,
                                       game.zoom - 2, game.zoom - 2])
 
+    # Actualizar la puntuación máxima
     if game.score > highscore:
         highscore = game.score
 
+    # Definir diferentes fuentes para el texto
     font = pygame.font.SysFont('Pixeled', 40, True, False)
     font2 = pygame.font.SysFont('Calibri', 80, True, False)
     font1 = pygame.font.SysFont('Calibri', 75, True, False)
     font3 = pygame.font.SysFont('Spoof', 39, True, False)
+
     text = font.render("Score: " + str(game.score), True, WHITE)
     text2 = font.render("TETRIS" + str(), True, YELLOW)
     text_game_over = font1.render("Game Over", True, WHITE)
     text_game_over1 = font1.render("Press ESC", True, (255, 215, 0))
     text_highscore = font3.render("Highscore: " + str(highscore), True, GREEN)
     screen.blit(text_highscore, [530, 500])
+
+    # Mostrar mensajes adicionales cuando el juego ha terminado
     if game.state == "game over":
         intentos -= 1
         if intentos > 0:
@@ -283,9 +317,13 @@ while not done:
 
     screen.blit(text, [560, 100])
     screen.blit(text2, [580, 10])
+
+    # Mostrar mensajes de "Game Over"
     if game.state == "game over":
         screen.blit(text_game_over, [80, 200])
         screen.blit(text_game_over1, [90, 265])
+
+     # Realizar acciones cuando se hayan agotado todos los intentos
     if intentos <= 0:
         screen.fill(BLACK)
         background_image2 = pygame.image.load("gato (1).png").convert()
@@ -294,15 +332,19 @@ while not done:
         congrats_text = congrats_font.render("¡Felicidades has elegido el camino de la venganza !", True, BLUE)
         screen.blit(congrats_text, [220, 200])
 
+        # Mostrar la puntuación máxima obtenida
         highscore_text = font.render("Highscore: " + str(highscore), True, RED)
         screen.blit(highscore_text, [300, 300])
 
+        #ACTUALIZA LA PANTALLA Y LOS CAMNIOS
         pygame.display.flip()
         pygame.time.delay(5000)  # Display the screen for 5 seconds before quitting
         done = True
 
     pygame.display.flip()
+    #CONTROLA LA VELOCIDAD DEL BUCLE
     clock.tick(fps)
-
+    #CIERRA LA PANTALLA Y FINALIZA EL JUEGO
+pygame.quit()
 pygame.quit()
 
